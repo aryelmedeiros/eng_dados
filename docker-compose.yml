@@ -39,8 +39,9 @@ services:
       - "8088:8088/tcp" # YARN
       - "4040:4040/tcp" # SPARK HISTORY (DURING A VALID SPARKSESSION)
       - "18080:18080/tcp" # SPARK HISTORY SERVER
+      - "27017:27017/tcp"
       - "2222:22/tcp" # SSH
-    volumes: 
+    volumes:
       - ./apps:/home/${SYS_USERNAME}/apps
       - .env:/home/${SYS_USERNAME}/.env
       - node-master:/home/${SYS_USERNAME}/
@@ -69,7 +70,7 @@ services:
         condition: service_healthy
     entrypoint: ./bootstrap.sh
     command: HADOOP
-    volumes: 
+    volumes:
       - ./apps:/home/${SYS_USERNAME}/apps
       - .env:/home/${SYS_USERNAME}/.env
       - /home/${SYS_USERNAME}/
@@ -93,45 +94,33 @@ services:
         condition: service_healthy
     entrypoint: ./bootstrap.sh
     command: HIVE
-    volumes: 
+    volumes:
       - ./apps:/home/${SYS_USERNAME}/apps
       - .env:/home/${SYS_USERNAME}/.env
       - /home/${SYS_USERNAME}/
 
-  db:
-    container_name: db
-    hostname: postgres-db
-    image: postgres:15.2
-    tty: true
-    restart: unless-stopped
+  mongo:
+    image: mongo
+    restart: always
+    container_name: mongo
     environment:
-      - PGUSER=${PSQL_PGUSER}
-      - PGPASSWORD=${PSQL_PGPASSWORD}
-      - PGDATA=/postgres/data
-      - POSTGRES_HOST_AUTH_METHOD=md5
-      - POSTGRES_DB=${PSQL_DBNAME}
-      - POSTGRES_USER=${PSQL_PGUSER}
-      - POSTGRES_PASSWORD=${PSQL_PGPASSWORD}
-    profiles:
-      - hive
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    #      MONGO_INITDB_DATABASE: init
+    volumes:
+      - mongo_data:/data/db
+      - /etc/timezone:/etc/timezone:ro
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    container_name: mongo_ui
     ports:
-      - "5432:5432/tcp" # PGSQL SERVER
-    networks:
-      hadoop_network:
-        ipv4_address: ${IP_DB}
-    volumes: 
-      - ./apps:/postgres/apps
-      - postgres-db:/postgres/data
-      - ./sql/postgresql.conf:/postgres/conf/postgresql.conf
-      - ./sql/pg_hba.conf:/postgres/conf/pg_hba.conf
-      - ./sql/set_sql_permission.sh:/docker-entrypoint-initdb.d/set_sql_permission.sh
-    command: postgres -c config_file=/postgres/conf/postgresql.conf
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      start_period: 3s
-      interval: 1s
-      timeout: 3s
-      retries: 2
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
 
 networks:
   hadoop_network:
@@ -143,4 +132,4 @@ networks:
 
 volumes:
   node-master:
-  postgres-db:
+  mongo_data:

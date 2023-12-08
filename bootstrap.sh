@@ -32,7 +32,7 @@
 
 # Some coloring
 RED_COLOR=$(tput setaf 1)
-GREEN_COLOR=$(tput setaf 2) 
+GREEN_COLOR=$(tput setaf 2)
 YELLOW_COLOR=$(tput setaf 3)
 LIGHTBLUE_COLOR=$(tput setaf 6)
 RESET_COLORS=$(tput sgr0)
@@ -46,7 +46,7 @@ fi
 
 ###
 #### Load env variables
-if [[ -f "${HOME}/.env" ]]; then 
+if [[ -f "${HOME}/.env" ]]; then
     source "${HOME}/.env"
 fi
 ###
@@ -85,7 +85,7 @@ truncate -s 0 ${HADOOP_CONF_DIR}/workers
         echo "node-$i" >> "${HADOOP_CONF_DIR}/workers"
     done
     echo "${IP_HIVE} hive-server"
-    echo "${IP_DB} postgres-db"
+    #echo "${IP_DB} postgres-db"
 } > "${HOME}/.hosts"
 # Copy hosts file to /etc/hosts
 sudo bash -c "cat ${HOME}/.hosts > /etc/hosts"
@@ -126,7 +126,7 @@ elif [ "$NODE_REPLICAS" -ge 2 ]; then
 fi
 
 # Update spark-defaults.conf
-update_spark_defaults "spark.sql.warehouse.dir" "hdfs://node-master:9000/user/${SYS_USERNAME}/spark-warehouse" 
+update_spark_defaults "spark.sql.warehouse.dir" "hdfs://node-master:9000/user/${SYS_USERNAME}/spark-warehouse"
 update_spark_defaults "spark.driver.memory" "${MEM_DRV}"
 update_spark_defaults "spark.executor.memory" "${MEM_EXE}"
 sed -i -e "/^spark.sql.catalogImplementation/d" \
@@ -249,7 +249,7 @@ case "$1" in
                 # Creating .first_boot file as a flag to indicate that first boot has already done
                 touch ${FILE}
             fi
-            
+
             # Starting SPARK history server
             printf "${INFO} Starting SPARK history server${RESET_COLORS}...\n"
             start-history-server.sh

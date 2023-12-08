@@ -39,7 +39,7 @@ ENV PASSWORD "${PASS}"
 # BR Mirror
 RUN sed --in-place --regexp-extended "s/(\/\/)(archive\.ubuntu)/\1br.\2/" /etc/apt/sources.list
 
-RUN apt-get update -qq 
+RUN apt-get update -qq
 RUN DEBIAN_FRONTEND=noninteractive DEBCONF_NOWARNINGS=yes \
 apt-get install -qq --no-install-recommends \
 sudo vim nano dos2unix ssh wget openjdk-8-jdk-headless \
@@ -53,7 +53,7 @@ RUN apt clean && rm -rf /var/lib/apt/lists/*
 RUN ln -sf /usr/bin/python3.10 /usr/bin/python
 RUN ln -sf /usr/bin/python /usr/bin/python3
 
-# Creates user and add it to sudoers 
+# Creates user and add it to sudoers
 RUN adduser --disabled-password --gecos "" ${USERNAME}
 RUN echo "${USERNAME}:${PASSWORD}" | chpasswd
 RUN usermod -aG sudo ${USERNAME}
@@ -99,17 +99,25 @@ RUN ln -sf ${MYDIR}/apache-hive-* ${HIVE_HOME}
 
 # Additional libs for Spark
 # PostgresSQL JDBC
-RUN wget -q -nc --no-check-certificate https://jdbc.postgresql.org/download/postgresql-42.6.0.jar -P ${SPARK_HOME}/jars
+#RUN wget -q -nc --no-check-certificate https://jdbc.postgresql.org/download/postgresql-42.6.0.jar -P ${SPARK_HOME}/jars
 # Graphframes
 RUN wget -q -nc --no-check-certificate https://repos.spark-packages.org/graphframes/graphframes/0.8.2-spark3.2-s_2.12/graphframes-0.8.2-spark3.2-s_2.12.jar -P ${SPARK_HOME}/jars
 # Install graphframes / pandas (for Spark GraphX/Graphframes and MLlib)
 RUN pip install -q graphframes pandas
+
+
+
 
 # Optional (convert charset from UTF-16 to UTF-8)
 RUN dos2unix config_files/*
 
 # Load environment variables into .bashrc file
 RUN cat config_files/system/bash_profile >> ${MYDIR}/.bashrc
+
+# Specify the version of MongoDB to install
+COPY mongodb-linux-x86_64-ubuntu2204-7.0.4.tgz /usr/local/
+# RUN tar -zxvf /mongodb-linux-x86_64-ubuntu2204-7.0.4.tgz -C /usr/local \
+#    && rm /usr/local/mongodb-linux-x86_64-ubuntu2204-7.0.4.tgz
 
 # Copy config files to Hadoop config folder
 RUN cp config_files/hadoop/core-site.xml ${HADOOP_HOME}/etc/hadoop/
